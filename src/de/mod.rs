@@ -412,7 +412,11 @@ where
     {
         let text = self.next_text()?;
         let string = text.decode_and_escape(self.reader.decoder())?;
-        visitor.visit_string(string.into_owned())
+        if string.starts_with(PRIMITIVE_PREFIX) {
+            visitor.visit_str(string.split_at(PRIMITIVE_PREFIX.len()).1)
+        } else {
+            visitor.visit_string(string.into_owned())
+        }
     }
 
     fn deserialize_char<V>(self, visitor: V) -> Result<V::Value, DeError>
