@@ -1509,6 +1509,11 @@ mod tests {
             }
 
             #[derive(Debug, Deserialize, PartialEq)]
+            struct Wrapper {
+                node: Node,
+            }
+
+            #[derive(Debug, Deserialize, PartialEq)]
             struct Nested {
                 //TODO: change to f64 after fixing https://github.com/serde-rs/serde/issues/1183
                 float: String,
@@ -1530,6 +1535,12 @@ mod tests {
             fn primitive_unit() {
                 let data: Node = from_str("PrimitiveUnit").unwrap();
                 assert_eq!(data, Node::PrimitiveUnit);
+            }
+
+            #[test]
+            fn wrapped_primitive_unit() {
+                let data: Wrapper = from_str(r#"<Wrapper node="PrimitiveUnit"/>"#).unwrap();
+                assert_eq!(data, Wrapper { node: Node::PrimitiveUnit });
             }
 
             #[test]
