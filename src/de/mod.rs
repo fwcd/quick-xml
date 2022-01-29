@@ -1492,6 +1492,8 @@ mod tests {
             #[derive(Debug, Deserialize, PartialEq)]
             enum Node {
                 Unit,
+                #[serde(rename = "$primitive=PrimitiveUnit")]
+                PrimitiveUnit,
                 Newtype(bool),
                 //TODO: serde bug https://github.com/serde-rs/serde/issues/1904
                 // Tuple(f64, String),
@@ -1526,6 +1528,12 @@ mod tests {
             fn unit() {
                 let data: Node = from_str("<Unit/>").unwrap();
                 assert_eq!(data, Node::Unit);
+            }
+
+            #[test]
+            fn primitive_unit() {
+                let data: Node = from_str("PrimitiveUnit").unwrap();
+                assert_eq!(data, Node::PrimitiveUnit);
             }
 
             #[test]
