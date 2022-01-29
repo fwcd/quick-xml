@@ -1,5 +1,5 @@
 use crate::{
-    de::{escape::EscapedDeserializer, BorrowingReader, DeEvent, Deserializer},
+    de::{escape::EscapedDeserializer, BorrowingReader, DeEvent, Deserializer, PRIMITIVE_PREFIX},
     errors::serialize::DeError,
 };
 use serde::de::{self, DeserializeSeed, Deserializer as SerdeDeserializer, Visitor};
@@ -11,14 +11,26 @@ where
     R: BorrowingReader<'de>,
 {
     de: &'a mut Deserializer<'de, R>,
+    /// list of variants that are serialized in a primitive fashion (defined as starting with $primitive=)
+    primitive_variants: Vec<&'static [u8]>,
 }
 
 impl<'de, 'a, R> EnumAccess<'de, 'a, R>
 where
     R: BorrowingReader<'de>,
 {
-    pub fn new(de: &'a mut Deserializer<'de, R>) -> Self {
-        EnumAccess { de }
+    pub fn new(
+        de: &'a mut Deserializer<'de, R>,
+        variants: &'static [&'static str],
+    ) -> Self {
+        EnumAccess {
+            de,
+            primitive_variants: variants
+                .iter()
+                .filter(|v| v.starts_with(PRIMITIVE_PREFIX))
+                .map(|v| v.as_bytes())
+                .collect()
+        }
     }
 }
 
@@ -35,7 +47,13 @@ where
     {
         let decoder = self.de.reader.decoder();
         let de = match self.de.peek()? {
-            DeEvent::Text(t) => EscapedDeserializer::new(Cow::Borrowed(t), decoder, true),
+            DeEvent::Text(t) => {
+                let text: &[u8] = t;
+                let v = self.primitive_variants
+                    .into_iter()
+                    .find(|v| text == &v[PRIMITIVE_PREFIX.len()..])
+                    .unwrap_or(text);
+                EscapedDeserializer::new(Cow::Borrowed(v), decoder, true)},
             DeEvent::Start(e) => EscapedDeserializer::new(Cow::Borrowed(e.name()), decoder, false),
             _ => {
                 return Err(DeError::Unsupported(

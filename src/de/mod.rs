@@ -412,11 +412,7 @@ where
     {
         let text = self.next_text()?;
         let string = text.decode_and_escape(self.reader.decoder())?;
-        if string.starts_with(PRIMITIVE_PREFIX) {
-            visitor.visit_str(string.split_at(PRIMITIVE_PREFIX.len()).1)
-        } else {
-            visitor.visit_string(string.into_owned())
-        }
+        visitor.visit_string(string.into_owned())
     }
 
     fn deserialize_char<V>(self, visitor: V) -> Result<V::Value, DeError>
@@ -536,13 +532,13 @@ where
     fn deserialize_enum<V>(
         self,
         _name: &'static str,
-        _variants: &'static [&'static str],
+        variants: &'static [&'static str],
         visitor: V,
     ) -> Result<V::Value, DeError>
     where
         V: Visitor<'de>,
     {
-        let value = visitor.visit_enum(var::EnumAccess::new(self))?;
+        let value = visitor.visit_enum(var::EnumAccess::new(self, variants))?;
         Ok(value)
     }
 
