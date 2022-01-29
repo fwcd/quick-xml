@@ -95,6 +95,7 @@ impl<'de, 'a, R: BorrowingReader<'de>> de::MapAccess<'de> for MapAccess<'de, 'a,
                 Cow::Borrowed(a.key),
                 decoder,
                 false,
+                Vec::new(),
             ))
             .map(Some)
         } else {
@@ -149,7 +150,7 @@ impl<'de, 'a, R: BorrowingReader<'de>> de::MapAccess<'de> for MapAccess<'de, 'a,
                     } else {
                         let name = Cow::Borrowed(e.local_name());
                         self.state = State::Nested;
-                        seed.deserialize(EscapedDeserializer::new(name, decoder, false))
+                        seed.deserialize(EscapedDeserializer::new(name, decoder, false, Vec::new()))
                     };
                     key.map(Some)
                 }
@@ -166,7 +167,7 @@ impl<'de, 'a, R: BorrowingReader<'de>> de::MapAccess<'de> for MapAccess<'de, 'a,
             State::Attribute => {
                 let decoder = self.de.reader.decoder();
                 match self.next_attr()? {
-                    Some(a) => seed.deserialize(EscapedDeserializer::new(a.value, decoder, true)),
+                    Some(a) => seed.deserialize(EscapedDeserializer::new(a.value, decoder, true, Vec::new())),
                     // We set `Attribute` state only when we are sure that `next_attr()` returns a value
                     None => unreachable!(),
                 }

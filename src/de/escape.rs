@@ -20,14 +20,17 @@ pub struct EscapedDeserializer<'a> {
     escaped_value: Cow<'a, [u8]>,
     /// If `true`, value requires unescaping before using
     escaped: bool,
+    /// Primitive variants if needed
+    primitive_variants: Vec<&'static [u8]>,
 }
 
 impl<'a> EscapedDeserializer<'a> {
-    pub fn new(escaped_value: Cow<'a, [u8]>, decoder: Decoder, escaped: bool) -> Self {
+    pub fn new(escaped_value: Cow<'a, [u8]>, decoder: Decoder, escaped: bool, primitive_variants: Vec<&'static [u8]>) -> Self {
         EscapedDeserializer {
             decoder,
             escaped_value,
             escaped,
+            primitive_variants,
         }
     }
     fn unescaped(&self) -> Result<Cow<[u8]>, DeError> {

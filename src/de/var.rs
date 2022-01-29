@@ -49,12 +49,13 @@ where
         let de = match self.de.peek()? {
             DeEvent::Text(t) => {
                 let text: &[u8] = t;
-                let v = self.primitive_variants
-                    .into_iter()
+                let variant = self.primitive_variants
+                    .iter()
+                    .map(|&v| v)
                     .find(|v| text == &v[PRIMITIVE_PREFIX.len()..])
                     .unwrap_or(text);
-                EscapedDeserializer::new(Cow::Borrowed(v), decoder, true)},
-            DeEvent::Start(e) => EscapedDeserializer::new(Cow::Borrowed(e.name()), decoder, false),
+                EscapedDeserializer::new(Cow::Borrowed(variant), decoder, true, self.primitive_variants)},
+            DeEvent::Start(e) => EscapedDeserializer::new(Cow::Borrowed(e.name()), decoder, false, self.primitive_variants),
             _ => {
                 return Err(DeError::Unsupported(
                     "Invalid event for Enum, expecting `Text` or `Start`",
